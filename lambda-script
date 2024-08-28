@@ -1,0 +1,25 @@
+import json
+import csv
+import boto3
+import os
+
+def lambda_handler(event, context):
+    # Extract relevant details from the notification payload
+    event_type = event['detail']['eventType']
+    timestamp = event['detail']['timestamp']
+    affected_resources = event['detail']['affectedResources']
+
+    # Create a CSV file in a specific S3 bucket (if desired)
+    s3_client = boto3.client('s3')
+    bucket_name = os.environ['S3_BUCKET']
+    file_name = 'health_notifications.csv'
+
+    # Write the extracted details to the CSV file
+    csv_data = [event_type, timestamp, ';'.join(affected_resources)]
+    s3_client.put_object(
+        Bucket=bucket_name,
+        Key=file_name,
+        Body='\n'.join(csv_data))
+
+    print(f"Notification processed: {event_type}")
+    return {'statusCode': 200, 'body': 'Notification processed successfully'}
